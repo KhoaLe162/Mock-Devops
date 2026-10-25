@@ -7,6 +7,7 @@ import com.spkd.tinycrm.tinyos.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.spkd.tinycrm.tinyos.dto.UserProfileDto;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -26,15 +27,15 @@ public class AuthenticationController {
         try {
             String ipAddress = getClientIpAddress(request);
             String userAgent = request.getHeader("User-Agent");
-            
+
             LoginResponse response = authenticationService.login(loginRequest, ipAddress, userAgent);
-            
+
             if (response.isSuccess()) {
                 // Store session token in HTTP session for easy access
                 HttpSession session = request.getSession(true);
                 session.setAttribute("sessionToken", response.getSessionToken());
                 session.setAttribute("userId", response.getUser().getId());
-                
+
                 return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.badRequest().body(response);
@@ -50,7 +51,7 @@ public class AuthenticationController {
         try {
             HttpSession session = request.getSession(false);
             Map<String, Object> response = new HashMap<>();
-            
+
             if (session != null) {
                 String sessionToken = (String) session.getAttribute("sessionToken");
                 if (sessionToken != null) {
@@ -58,7 +59,7 @@ public class AuthenticationController {
                 }
                 session.invalidate();
             }
-            
+
             response.put("success", true);
             response.put("message", "Logged out successfully");
             return ResponseEntity.ok(response);
@@ -75,7 +76,7 @@ public class AuthenticationController {
         try {
             // Log the registration attempt
             System.out.println("Registration attempt for user: " + user.getUsername() + ", email: " + user.getEmail());
-            
+
             // Validate required fields
             if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
                 throw new RuntimeException("Username is required");
@@ -94,17 +95,17 @@ public class AuthenticationController {
             }
 
             User registeredUser = authenticationService.registerUser(user);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "User registered successfully");
             response.put("user", registeredUser);
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             System.err.println("Registration error: " + e.getMessage());
             e.printStackTrace();
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", e.getMessage() != null ? e.getMessage() : "Registration failed");
@@ -112,29 +113,46 @@ public class AuthenticationController {
         }
     }
 
+    private UserProfileDto convertToPublicDto(User user) {
+        UserProfileDto dto = new UserProfileDto();
+
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setBio(user.getBio());
+        dto.setAvatarUrl(user.getAvatarUrl());
+        dto.setJobTitle(user.getJobTitle());
+        dto.setDepartment(user.getDepartment());
+        dto.setCompany(user.getCompany());
+        dto.setCreatedAt(user.getCreatedAt());
+
+        return dto;
+    }
+
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(HttpServletRequest request) {
         try {
             HttpSession session = request.getSession(false);
             Map<String, Object> response = new HashMap<>();
-            
+
             if (session == null) {
                 response.put("success", false);
                 response.put("message", "No active session");
                 return ResponseEntity.status(401).body(response);
             }
-            
+
             String sessionToken = (String) session.getAttribute("sessionToken");
             if (sessionToken == null) {
                 response.put("success", false);
                 response.put("message", "No session token found");
                 return ResponseEntity.status(401).body(response);
             }
-            
+
             Optional<User> userOpt = authenticationService.validateSession(sessionToken);
             if (userOpt.isPresent()) {
                 response.put("success", true);
-                response.put("user", userOpt.get());
+                response.put("user", convertToPublicDto(userOpt.get()));
                 return ResponseEntity.ok(response);
             } else {
                 session.invalidate();
@@ -155,7 +173,7 @@ public class AuthenticationController {
         try {
             HttpSession session = request.getSession(false);
             Map<String, Object> response = new HashMap<>();
-            
+
             if (session != null) {
                 String sessionToken = (String) session.getAttribute("sessionToken");
                 if (sessionToken != null) {
@@ -166,7 +184,7 @@ public class AuthenticationController {
                 }
                 session.invalidate();
             }
-            
+
             response.put("success", true);
             response.put("message", "All sessions logged out successfully");
             return ResponseEntity.ok(response);
