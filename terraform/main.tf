@@ -43,6 +43,9 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "20.37.1"
 
+  create_kms_key = false
+  cluster_encryption_config = {}
+
   cluster_name    = local.cluster_name
   cluster_version = var.kubernetes_version
 

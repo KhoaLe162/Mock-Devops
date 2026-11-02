@@ -415,7 +415,8 @@ export default {
     }
 
     const handleSignup = async () => {
-      const signupFormRef = document.querySelector('.auth-form .el-form')
+      const signupFormRef = document.querySelector('.auth-form')
+      
       if (!signupFormRef) {
         ElMessage.error('Form not found')
         return
