@@ -1,0 +1,9 @@
+Resources target namespace tinycrm. No credentials are generated.
+Required Secret: {{ .Values.mysql.existingSecret }} (see README.md).
+MySQL uses emptyDir: all database data is lost when the MySQL Pod is replaced.
+Frontend: frontend:{{ .Values.frontend.service.port }}
+Backend: backend:{{ .Values.backend.service.port }}
+MySQL: mysql:3306
+IMPORTANT: The repository frontend hardcodes localhost:8080. Rebuild it for same-origin
+API calls before public access. BACKEND_URL does not change the compiled Vue bundle.
+{{ if not .Values.ingress.enabled }}Ingress is disabled.{{ end }}

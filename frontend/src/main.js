@@ -8,7 +8,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import axios from 'axios'
 
 // Configure axios
-axios.defaults.baseURL = 'http://localhost:8080'
+axios.defaults.baseURL = ''
 axios.defaults.headers.common['Content-Type'] = 'application/json'
 axios.defaults.withCredentials = true
 

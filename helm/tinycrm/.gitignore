@@ -1,0 +1,3 @@
+# Never commit local credentials or rendered Secret manifests.
+*.local.yaml
+*.local.yml

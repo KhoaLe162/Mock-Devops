@@ -1,0 +1,21 @@
+{{- range $component := list "frontend" "backend" "database" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ if eq $component "database" }}mysql{{ else }}{{ $component }}{{ end }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "tinycrm.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: {{ if eq $component "database" }}mysql{{ else }}http{{ end }}
+      port: {{ if eq $component "database" }}3306{{ else }}{{ (index $.Values $component).service.port }}{{ end }}
+      targetPort: {{ if eq $component "database" }}mysql{{ else }}http{{ end }}
+      protocol: TCP
+  selector:
+    {{- include "tinycrm.selector" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $component }}
+{{- end }}

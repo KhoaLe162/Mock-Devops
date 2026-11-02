@@ -1,0 +1,131 @@
+# Render with --namespace tinycrm. The release namespace must be tinycrm.
+imagePullSecrets: []
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: 084250374652.dkr.ecr.ap-southeast-1.amazonaws.com/tinycrm-frontend
+    tag: latest
+    pullPolicy: Always
+  service:
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  startupProbe:
+    httpGet:
+      path: /health
+      port: http
+    periodSeconds: 5
+    failureThreshold: 30
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 3
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+backend:
+  # Servlet sessions and avatar uploads are local to a pod. See README before scaling.
+  replicaCount: 1
+  image:
+    repository: 084250374652.dkr.ecr.ap-southeast-1.amazonaws.com/tinycrm-backend
+    tag: latest
+    pullPolicy: Always
+  service:
+    # Must stay 8080 with the current frontend image's Nginx configuration.
+    port: 8080
+  # Current .env profile; no profile-specific properties files exist.
+  profile: dev
+  logLevel: INFO
+  javaOpts: "-Xmx512m -Xms256m -XX:+UseContainerSupport"
+  datasourceParameters: "useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  ddlAuto: update
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  # Actuator is NOT a dependency. TCP proves the listener is open, not DB health.
+  startupProbe:
+    tcpSocket:
+      port: http
+    periodSeconds: 5
+    failureThreshold: 60
+  readinessProbe:
+    tcpSocket:
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 3
+  livenessProbe:
+    tcpSocket:
+      port: http
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+mysql:
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+  # Actual current .env value; Compose/properties defaults instead use support_module.
+  database: support_module_dev
+  # Pre-create in tinycrm out of band; this chart never renders credential values.
+  existingSecret: tinycrm-mysql-credentials
+  secretKeys:
+    rootPassword: MYSQL_ROOT_PASSWORD
+    username: MYSQL_USER
+    password: MYSQL_PASSWORD
+  # Single-replica Deployment with disk-backed emptyDir at /var/lib/mysql.
+  # All database data is lost on Pod replacement, deletion, or rescheduling.
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  startupProbe:
+    exec:
+      command: [sh, -ec, 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --protocol=TCP -h 127.0.0.1 -uroot -Nse "SELECT 1"']
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 60
+  readinessProbe:
+    exec:
+      command: [sh, -ec, 'MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP -h 127.0.0.1 -u"$MYSQL_USER" "$MYSQL_DATABASE" -Nse "SELECT 1"']
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # A local socket ping tests mysqld without coupling liveness to app credentials.
+  livenessProbe:
+    exec:
+      command: [sh, -ec, 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqladmin --protocol=socket -uroot ping --silent']
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+ingress:
+  enabled: false
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+  # Empty allows the ALB hostname. Set a DNS name when ready.
+  host: ""

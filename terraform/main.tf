@@ -4,10 +4,15 @@ data "aws_availability_zones" "available" {
 
 data "aws_partition" "current" {}
 
+data "http" "my_ip" {
+  url = "https://checkip.amazonaws.com"
+}
+
 locals {
   name = "${var.project_name}-${var.environment}"
   azs  = slice(data.aws_availability_zones.available.names, 0, 2)
   cluster_name = "${local.name}-eks"
+  admin_cidr = "${trimspace(data.http.my_ip.response_body)}/32"
 }
 
 module "vpc" {
@@ -55,7 +60,7 @@ module "eks" {
 
   cluster_endpoint_private_access      = true
   cluster_endpoint_public_access       = true
-  cluster_endpoint_public_access_cidrs = [var.admin_cidr]
+  cluster_endpoint_public_access_cidrs = [local.admin_cidr]
 
   enable_cluster_creator_admin_permissions = true
   authentication_mode                      = "API_AND_CONFIG_MAP"

@@ -1,0 +1,9 @@
+{{- if ne .Release.Namespace "tinycrm" -}}
+{{- fail "TinyCRM must be rendered/deployed with --namespace tinycrm" -}}
+{{- end -}}
+{{- if ne (int .Values.backend.service.port) 8080 -}}
+{{- fail "The existing frontend Nginx image requires backend Service port 8080" -}}
+{{- end -}}
+{{- if not .Values.mysql.existingSecret -}}
+{{- fail "mysql.existingSecret must name a pre-existing credentials Secret in tinycrm" -}}
+{{- end -}}
