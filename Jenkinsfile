@@ -34,7 +34,7 @@ pipeline {
             steps {
                 sh '''
                     docker build -t tinycrm-frontend:${BUILD_NUMBER} ./frontend
-                    docker build -t tinycrm-backend:${BUILD_NUMBER} ./backend
+                    docker build -t tinycrm-backend:${BUILD_NUMBER} ./tinyOS
                 '''
             }
         }
