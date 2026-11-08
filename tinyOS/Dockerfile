@@ -26,7 +26,7 @@ RUN addgroup -g 1001 -S spring && adduser -S spring -u 1001 -G spring
 WORKDIR /app
 
 # Copy the built JAR from builder stage
-COPY --from=builder /app/build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/app.jar app.jar
 
 # Change ownership to spring user
 RUN chown spring:spring app.jar
