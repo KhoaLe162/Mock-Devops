@@ -60,7 +60,28 @@ module "eks" {
 
   cluster_endpoint_private_access      = true
   cluster_endpoint_public_access       = true
-  cluster_endpoint_public_access_cidrs = [local.admin_cidr]
+  cluster_endpoint_public_access_cidrs = [
+    local.admin_cidr,
+    "13.228.228.26/32"
+  ]
+
+  #access entries for EKS
+  access_entries = {
+  jenkins = {
+    principal_arn = "arn:aws:iam::084250374652:role/tinyCRM-jenkins-role"
+
+    policy_associations = {
+      tinycrm_deploy = {
+        policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+
+        access_scope = {
+          type       = "namespace"
+          namespaces = ["tinycrm"]
+        }
+      }
+    }
+  }
+}
 
   enable_cluster_creator_admin_permissions = true
   authentication_mode                      = "API_AND_CONFIG_MAP"
