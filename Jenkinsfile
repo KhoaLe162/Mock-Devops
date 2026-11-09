@@ -62,7 +62,25 @@ pipeline {
                 '''
             }
         }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh '''
+                    aws eks update-kubeconfig \
+                    --region ap-southeast-1 \
+                    --name tinycrm-dev-eks
+
+                    helm upgrade --install tinycrm ./helm/tinycrm \
+                    --namespace tinycrm \
+                    --set-string frontend.image.tag=${BUILD_NUMBER} \
+                    --set-string backend.image.tag=${BUILD_NUMBER} \
+                    --wait \
+                    --timeout 10m
+                '''
+            }
+        }
     }
+        
 
     post {
         success {
