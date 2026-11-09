@@ -9,10 +9,10 @@ data "http" "my_ip" {
 }
 
 locals {
-  name = "${var.project_name}-${var.environment}"
-  azs  = slice(data.aws_availability_zones.available.names, 0, 2)
+  name         = "${var.project_name}-${var.environment}"
+  azs          = slice(data.aws_availability_zones.available.names, 0, 2)
   cluster_name = "${local.name}-eks"
-  admin_cidr = "${trimspace(data.http.my_ip.response_body)}/32"
+  admin_cidr   = "${trimspace(data.http.my_ip.response_body)}/32"
 }
 
 module "vpc" {
@@ -34,12 +34,12 @@ module "vpc" {
   single_nat_gateway = true
 
   public_subnet_tags = {
-    "kubernetes.io/role/elb"             = "1"
+    "kubernetes.io/role/elb"                      = "1"
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
   }
 
   private_subnet_tags = {
-    "kubernetes.io/role/internal-elb"   = "1"
+    "kubernetes.io/role/internal-elb"             = "1"
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
   }
 }
@@ -48,7 +48,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "20.37.1"
 
-  create_kms_key = false
+  create_kms_key            = false
   cluster_encryption_config = {}
 
   cluster_name    = local.cluster_name
@@ -58,8 +58,8 @@ module "eks" {
   subnet_ids               = module.vpc.private_subnets
   control_plane_subnet_ids = module.vpc.private_subnets
 
-  cluster_endpoint_private_access      = true
-  cluster_endpoint_public_access       = true
+  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = true
   cluster_endpoint_public_access_cidrs = [
     local.admin_cidr,
     "13.228.228.26/32"
@@ -67,21 +67,21 @@ module "eks" {
 
   #access entries for EKS
   access_entries = {
-  jenkins = {
-    principal_arn = "arn:aws:iam::084250374652:role/tinyCRM-jenkins-role"
+    jenkins = {
+      principal_arn = "arn:aws:iam::084250374652:role/tinyCRM-jenkins-role"
 
-    policy_associations = {
-      tinycrm_deploy = {
-        policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
+      policy_associations = {
+        tinycrm_deploy = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
 
-        access_scope = {
-          type       = "namespace"
-          namespaces = ["tinycrm"]
+          access_scope = {
+            type       = "namespace"
+            namespaces = ["tinycrm"]
+          }
         }
       }
     }
   }
-}
 
   enable_cluster_creator_admin_permissions = true
   authentication_mode                      = "API_AND_CONFIG_MAP"

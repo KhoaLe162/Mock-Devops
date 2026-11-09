@@ -120,7 +120,7 @@ mysql:
     failureThreshold: 3
 
 ingress:
-  enabled: false
+  enabled: true
   className: alb
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
