@@ -537,9 +537,9 @@ export default {
 
 <style scoped>
 
-.cicd-banner {
 /*This is for CI/CD test*/ 
-  /* background: #2563eb;
+/* .cicd-banner {
+  background: #2563eb;
   color: white;
   padding: 12px 20px;
   text-align: center;
