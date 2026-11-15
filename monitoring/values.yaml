@@ -1,0 +1,42 @@
+grafana:
+  enabled: true
+
+  persistence:
+    enabled: false
+
+  service:
+    type: ClusterIP
+
+  ingress:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 768Mi
+
+prometheus:
+  prometheusSpec:
+    retention: 2d
+    retentionSize: 1GB
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+    storageSpec:
+      emptyDir:
+        medium: ""
+        sizeLimit: 2Gi
+
+alertmanager:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: true
+
+kube-state-metrics:
+  enabled: true
