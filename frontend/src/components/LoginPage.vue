@@ -1,8 +1,8 @@
 <template>
   <!--This is for CI/CD test-->
-  <!-- <div class="cicd-banner">
+  <div class="cicd-banner">
   🚀 TinyCRM — Jenkins CI/CD Test #13
-  </div> -->
+  </div>
 
   <div class="login-container">
     <div class="background-animation"></div>
@@ -538,7 +538,7 @@ export default {
 <style scoped>
 
 /*This is for CI/CD test*/ 
-/* .cicd-banner {
+.cicd-banner {
   background: #2563eb;
   color: white;
   padding: 12px 20px;
@@ -546,7 +546,7 @@ export default {
   font-weight: bold;
   border-radius: 8px;
   margin-bottom: 20px;
-} */
+}
 
 .login-container {
   min-height: 100vh;
